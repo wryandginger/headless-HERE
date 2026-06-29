@@ -1,10 +1,12 @@
 # headless-HERE-TTN
-A python script that pulls and assembles HERE and TTN Traffic and Weather data from nrsc5.
+A pair of python scripts that pull and assemble HERE and TTN Traffic and Weather data from nrsc5.
 This is designed to be run as a cronjob periodically so you can see weather and traffic on other devices.
 
 For example, the files would be awesome on a Home Assistant dashboard.
 
-(this was vibecoded, but I did my best to clean up the code. sorry)
+(this was vibecoded, but I did my best to clean up the code. sorry.) 
+
+Note: the TTN.py script's map and coordinate logic were adapted from an old commit of KYDronePilot/hdfm.
 
 # Requirements:
 - An SDR Dongle (nooelec smart nesdr, rtl-sdr, etc.)
