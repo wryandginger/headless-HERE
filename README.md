@@ -35,7 +35,7 @@ Note: the TTN.py map and coordinate logic were adapted from an old release of [K
 2. Edit ttn.py and/or here.py for your desired frequency and timezone. (This is automatically configured for Seattle, WA)
    - ttn.py requires tuning to an iHeartRadio station (95.7 MHz or 106.1 MHz in Seattle)
    - here.py requires tuning to an Audacy station (99.9 MHz or 100.7 in Seattle) or Bonneville station (97.3 MHz in Seattle)
-4. Edit gif_ttn.py and/or for the IP and Samba credentials of your Home Assistant Image
+4. Edit gif_ttn.py and/or gif_here.py for the IP and Samba credentials of your Home Assistant instance
 5. Edit the ttnhere.sh script so it directs to the correct home directory
 6. Optionally, you can disable TTN or HERE data in the ttnhere.sh file if you want to exclude one data source.
 7. Run crontab -e (not as root) and add the following to the bottom:
@@ -49,4 +49,4 @@ Note: the TTN.py map and coordinate logic were adapted from an old release of [K
 - Consider using a USB switch like the [Sonoff ZB Micro](https://www.amazon.com/SONOFF-ZBMicro-Zigbee-Switch-1-Pack/dp/B0CR1FTWT8/) to turn off power to the SDR between cycles. 
 - A cooler SDR lasts longer and tunes in faster.
 - Use the Filesize integration to monitor the here.gif file (here.gif is the last file uploaded in a cycle). Turn on the disabled "Last Updated" diagnostic sensor.
-- Make an automation that is triggered when sensor.here_gif_size changes. Turn off the switch for the SDR for 3 minutes, then turn it back on.
+- Make an automation that is triggered when sensor.here_gif_size and last_updated changes. Turn off the switch for the SDR for 3 minutes, then turn it back on.
