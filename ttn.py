@@ -17,7 +17,9 @@ CHANNEL = "0"
 TEMP_DIR = os.path.expanduser("~/temp")
 MAP_DIR = os.path.join(TEMP_DIR, "map")
 US_MAP_PATH = os.path.join(MAP_DIR, "us.png")
-DEST_DIR = "/somewhere"
+DEST_DIR = os.path.expanduser("~/outputs/ttn")
+TZ = "America/Los_Angeles"
+TIMEOUT_SECONDS = 300  # Give up after 5 minutes
 
 # Ensure directories exist
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -38,7 +40,7 @@ def download_us_map():
 
     if not is_valid_image:
         print("Downloading base US map from GitHub...")
-        url = "https://github.com/wryandginger/headless-HERE-TTN/blob/main/temp/map/us.png?raw=true"
+        url = "https://github.com/wryandginger/hdfm/blob/master/maps/us_map.png?raw=true"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         try:
             with urllib.request.urlopen(req) as response, open(US_MAP_PATH, 'wb') as out_file:
@@ -48,8 +50,8 @@ def download_us_map():
             print(f"Error downloading base map: {e}")
 
 def monitor_and_harvest():
-    """Runs nrsc5 and prints progress tracking specific required files before termination."""
-    cmd = ["nrsc5", FREQ, CHANNEL, "-o", "1.png", "--dump-aas-files", TEMP_DIR]
+    """Runs nrsc5 and prints progress, terminating gracefully if target is reached or timeout occurs."""
+    cmd = ["nrsc5", FREQ, CHANNEL, "-o", os.path.join(TEMP_DIR, "1.png"), "--dump-aas-files", TEMP_DIR]
     print(f"Starting command: {' '.join(cmd)}")
     
     process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -58,8 +60,16 @@ def monitor_and_harvest():
     last_tmt_count, last_dwro_count, last_txt_count = -1, -1, -1
     tmt_pattern = re.compile(r'_TMT_.*_([1-3])_([1-3])_')
     
+    start_time = time.time()
+    
     try:
         while True:
+            # Check timeout condition
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= TIMEOUT_SECONDS:
+                print(f"Reached timeout of {TIMEOUT_SECONDS} seconds. Exiting data collection gracefully...")
+                break
+
             png_files = glob.glob(os.path.join(TEMP_DIR, "*.png"))
             txt_files = glob.glob(os.path.join(TEMP_DIR, "*.txt"))
             
@@ -105,10 +115,14 @@ def get_large_font(size):
     return ImageFont.load_default()
 
 def process_traffic_grid():
-    """Stitches 3x3 TMT grid and adds a large Pacific Time zone timestamp."""
+    """Stitches 3x3 TMT grid and adds a large custom time zone timestamp."""
     print("Processing TMT traffic map...")
     tmt_files = glob.glob(os.path.join(TEMP_DIR, "*_TMT_*.png"))
     
+    if not tmt_files:
+        print("No TMT files collected. Skipping traffic map generation.")
+        return
+
     grid_map = {}
     pattern = re.compile(r'_TMT_.*_(\d)_(\d)_')
     for f in tmt_files:
@@ -124,10 +138,10 @@ def process_traffic_grid():
         except Exception as e:
             print(f"Failed to paste tile {row}_{col}: {e}")
 
-    # Enforce Pacific Time Zone for timestamping
+    # Enforce configured time zone for timestamping
     draw = ImageDraw.Draw(canvas)
-    pacific_time = datetime.now(ZoneInfo("America/Los_Angeles"))
-    timestamp_str = pacific_time.strftime("%m/%d %H:%M")
+    local_time = datetime.now(ZoneInfo(TZ))
+    timestamp_str = local_time.strftime("%m/%d %H:%M")
     
     font = get_large_font(size=24)
     
@@ -141,7 +155,7 @@ def process_traffic_grid():
     draw.rectangle([text_x - 5, text_y - 2, 590, 590], fill="black")
     draw.text((text_x, text_y), timestamp_str, fill="white", font=font)
     
-    output_path = os.path.join(TEMP_DIR, "trafficmapTMT.png")
+    output_path = os.path.join(TEMP_DIR, "trafficmapTTN.png")
     canvas.save(output_path)
     print(f"Traffic map saved to {output_path}")
 
@@ -198,10 +212,10 @@ def crop_and_overlay_weather():
     dwro_img = Image.open(dwro_files[0]).convert("RGBA").resize((512, 512), Image.Resampling.LANCZOS)
     final_weather = Image.alpha_composite(cropped_map, dwro_img)
     
-    # Add large timestamp on the weather map
+    # Add large timestamp on the weather map using configured time zone
     draw = ImageDraw.Draw(final_weather)
-    pacific_time = datetime.now(ZoneInfo("America/Los_Angeles"))
-    timestamp_str = pacific_time.strftime("%m/%d %H:%M")
+    local_time = datetime.now(ZoneInfo(TZ))
+    timestamp_str = local_time.strftime("%m/%d %H:%M")
     
     font = get_large_font(size=20)
     
@@ -213,13 +227,13 @@ def crop_and_overlay_weather():
     draw.rectangle([text_x - 5, text_y - 2, 502, 502], fill="black")
     draw.text((text_x, text_y), timestamp_str, fill="white", font=font)
     
-    final_weather.save(os.path.join(TEMP_DIR, "weatherimgDWRO.png"))
+    final_weather.save(os.path.join(TEMP_DIR, "weatherimgTTN.png"))
     print("Weather map generated successfully with timestamp.")
 
 def move_final_outputs():
     """Moves final compiled files to the destination directory."""
     print(f"Moving final images to {DEST_DIR}...")
-    targets = ["trafficmapTMT.png", "weatherimgDWRO.png"]
+    targets = ["trafficmapTTN.png", "weatherimgTTN.png"]
     for t in targets:
         src = os.path.join(TEMP_DIR, t)
         if os.path.exists(src):
@@ -244,4 +258,3 @@ if __name__ == "__main__":
     crop_and_overlay_weather()
     move_final_outputs()
     cleanup_temp()
-    print("All tasks completed successfully!")
