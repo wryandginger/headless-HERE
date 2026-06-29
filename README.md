@@ -12,12 +12,10 @@ Note: the TTN.py map and coordinate logic were adapted from an old release of [K
 </div>
    
 # Requirements:
-- An SDR Dongle (nooelec smart nesdr, rtl-sdr, etc.)
+- An SDR Dongle (Nooelec smart nesdr, rtl-sdr, etc.)
+- A server running debian linux, Python 3, and Pillow (i.e. python3-pil)
 - A working install of [nrsc5](https://github.com/theori-io/nrsc5)
-- Python 3
-- Pillow
-- A server running debian linux
-- An installation of Home Assistant with Samba access
+- An installation of Home Assistant with Samba access on a different machine
 
 # What's included:
 - [TTN.py](https://github.com/wryandginger/headless-HERE-TTN/blob/main/ttn.py)  - Runs nrsc5 for up to 5 minutes while the TTN weather and traffice data is received by your SDR. Once the files are received, nrsc5 stops and final images are assembled in ~/outputs/ttn
