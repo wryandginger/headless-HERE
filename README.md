@@ -1,6 +1,6 @@
 # headless-HERE-TTN
 A set of python scripts that pull and assemble HERE and TTN Traffic and Weather data from nrsc5.
-This is designed to be run as a cronjob periodically so you can see weather and traffic on other devices.
+This is designed to be run as a cronjob periodically so you can see weather and traffic on a Home Assistant dashboard.
 
 (This was vibecoded, but I did my best to clean up the code. Sorry.) 
 
@@ -34,7 +34,7 @@ Note: the TTN.py map and coordinate logic were adapted from an old release of [K
 1. Download the contents of this repo to the home directory of your linux install
 2. Edit ttn.py and/or here.py for your desired frequency and timezone. (This is automatically configured for Seattle, WA)
    - ttn.py requires tuning to an iHeartRadio station (95.7 MHz or 106.1 MHz in Seattle)
-   - here.py requires tuning to an Audacy station (99.9 MHz) or Bonneville (97.3 MHZ in Seattle)
+   - here.py requires tuning to an Audacy station (99.9 MHz or 100.7 in Seattle) or Bonneville station (97.3 MHz in Seattle)
 4. Edit gif_ttn.py and/or for the IP and Samba credentials of your Home Assistant Image
 5. Edit the ttnhere.sh script so it directs to the correct home directory
 6. Optionally, you can disable TTN or HERE data in the ttnhere.sh file if you want to exclude one data source.
